@@ -60,6 +60,7 @@ try:
         shot = gui.screenshot(region=(x, y, w, h)).convert("RGB")
         shot.save(evidence / f"{name}.png")
         return shot
+    time.sleep(2)
     menu = snap("menu")
     # Status lines move the menu vertically. Locate the Pool button's solid dark bar.
     button_rows = [
@@ -68,8 +69,11 @@ try:
     ]
     assert len(button_rows) >= 12, "Could not locate the Pool button"
     gui.click(x + 290, y + button_rows[len(button_rows) // 2])
-    time.sleep(8)
-    pool = snap("pool")
+    box = (w // 3, h * 6 // 10, w * 2 // 3, h * 9 // 10)
+    def pool_ready():
+        shot = snap("pool")
+        return shot if ImageStat.Stat(shot.crop(box)).stddev[0] > 9 and ImageStat.Stat(ImageChops.difference(menu, shot)).mean[0] > 8 else None
+    pool = wait_for(pool_ready, 100)
     gui.keyDown("up")
     try:
         time.sleep(2)
@@ -78,7 +82,6 @@ try:
     driven = snap("driven")
     assert ImageStat.Stat(ImageChops.difference(menu, pool)).mean[0] > 8, "Pool did not open"
     # Exclude animated water, overlays and sonar. Compare the tiled pool geometry.
-    box = (w // 3, h * 6 // 10, w * 2 // 3, h * 9 // 10)
     change = ImageStat.Stat(ImageChops.difference(pool.crop(box), driven.crop(box))).mean[0]
     assert change > 3, f"Forward input did not change pool geometry: {change}"
     print(f"Pool opened and forward input moved the camera (pixel delta {change:.2f})", flush=True)
