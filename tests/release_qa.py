@@ -61,8 +61,8 @@ try:
         shot.save(evidence / f"{name}.png")
         return shot
     menu = snap("menu")
-    # Pool button is centered about (290, 223) in the default layout.
-    gui.click(x + 290, y + 223)
+    # Pool button is centered at x=290 and 35% of the viewport height.
+    gui.click(x + 290, y + round(h * 0.345))
     time.sleep(8)
     pool = snap("pool")
     gui.keyDown("up")
