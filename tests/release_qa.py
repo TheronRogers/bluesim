@@ -61,8 +61,13 @@ try:
         shot.save(evidence / f"{name}.png")
         return shot
     menu = snap("menu")
-    # Pool button is centered at x=290 and 35% of the viewport height.
-    gui.click(x + 290, y + round(h * 0.345))
+    # Status lines move the menu vertically. Locate the Pool button's solid dark bar.
+    button_rows = [
+        row for row in range(70, min(300, h))
+        if all(max(menu.getpixel((column, row))) < 63 for column in (170, 230, 390))
+    ]
+    assert len(button_rows) >= 12, "Could not locate the Pool button"
+    gui.click(x + 290, y + button_rows[len(button_rows) // 2])
     time.sleep(8)
     pool = snap("pool")
     gui.keyDown("up")
