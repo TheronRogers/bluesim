@@ -1,0 +1,46 @@
+name: Release interaction QA
+on: [push]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  play:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            artifact: bluesim-windows
+            archive: bluesim-windows.zip
+          - os: ubuntu-latest
+            artifact: bluesim-exports
+            archive: bluesim-linux.zip
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v8
+        with:
+          name: ${{ matrix.artifact }}
+          run-id: 42681611264
+          github-token: ${{ github.token }}
+      - run: python -m pip install pyautogui pillow pymavlink
+      - if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Expand-Archive ${{ matrix.archive }} bundle
+          python tests/release_qa.py
+      - if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y xvfb xdotool scrot xauth openbox
+          unzip -q ${{ matrix.archive }} -d bundle
+          xvfb-run -a -s '-screen 0 1280x800x24' bash -c 'openbox & touch ~/.Xauthority; python tests/release_qa.py'
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: evidence-${{ runner.os }}
+          path: evidence/
