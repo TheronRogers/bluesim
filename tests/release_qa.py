@@ -69,10 +69,11 @@ try:
     ]
     assert len(button_rows) >= 12, "Could not locate the Pool button"
     gui.click(x + 290, y + button_rows[len(button_rows) // 2])
-    box = (w // 3, h * 6 // 10, w * 2 // 3, h * 9 // 10)
+    box = (w // 3, h * 7 // 10, w * 2 // 3, h * 9 // 10)
     def pool_ready():
         shot = snap("pool")
-        return shot if ImageStat.Stat(shot.crop(box)).stddev[0] > 9 and ImageStat.Stat(ImageChops.difference(menu, shot)).mean[0] > 8 else None
+        red, _, blue = ImageStat.Stat(shot.crop(box)).mean
+        return shot if blue - red > 12 else None
     pool = wait_for(pool_ready, 100)
     gui.keyDown("up")
     try:
