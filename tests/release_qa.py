@@ -75,17 +75,19 @@ try:
         red, _, blue = ImageStat.Stat(shot.crop(box)).mean
         return shot if blue - red > 12 else None
     pool = wait_for(pool_ready, 100)
-    gui.keyDown("up")
+    gui.click(x + w // 2, y + h // 2)
+    gui.keyDown("d")
     try:
-        time.sleep(2)
+        time.sleep(7)
     finally:
-        gui.keyUp("up")
+        gui.keyUp("d")
+    time.sleep(3)
     driven = snap("driven")
     assert ImageStat.Stat(ImageChops.difference(menu, pool)).mean[0] > 8, "Pool did not open"
     # Exclude animated water, overlays and sonar. Compare the tiled pool geometry.
     change = ImageStat.Stat(ImageChops.difference(pool.crop(box), driven.crop(box))).mean[0]
-    assert change > 3, f"Forward input did not change pool geometry: {change}"
-    print(f"Pool opened and forward input moved the camera (pixel delta {change:.2f})", flush=True)
+    assert change > 3, f"Strafe input did not change pool geometry: {change}"
+    print(f"Pool opened and strafe input moved the camera (pixel delta {change:.2f})", flush=True)
     link = mavutil.mavlink_connection("tcp:127.0.0.1:5760", source_system=255)
     heartbeat = link.wait_heartbeat(timeout=25)
     assert heartbeat is not None and heartbeat.type == mavutil.mavlink.MAV_TYPE_SUBMARINE
